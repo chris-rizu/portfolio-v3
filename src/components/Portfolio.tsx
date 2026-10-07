@@ -102,7 +102,7 @@ function Loader() {
 
   useEffect(() => {
     if (ready) {
-      const t = setTimeout(() => setGone(true), 1000);
+      const t = setTimeout(() => setGone(true), 900);
       return () => clearTimeout(t);
     }
     // never trap visitors behind the loader
@@ -113,28 +113,34 @@ function Loader() {
   if (gone) return null;
   return (
     <div className={`loader ${ready ? "loader-done" : ""}`} role="status" aria-live="polite">
-      <p className="loader-name">{profile.name}</p>
+      <p className="loader-name">Chris Paolo Caral</p>
       <div className="loader-bar">
         <span style={{ transform: `scaleX(${progress / 100})` }} />
       </div>
-      <p className="loader-pct">Setting up the room · {Math.round(progress)}%</p>
+      <p className="mono loader-pct">Loading the room — {String(Math.round(progress)).padStart(3, "0")}%</p>
     </div>
   );
 }
 
+/** Local time in Cebu, shown in the nav. Client-only to avoid a hydration mismatch. */
+function CebuClock() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const fmt = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", hour: "2-digit", minute: "2-digit" });
+    const tick = () => setTime(fmt.format(new Date()));
+    tick();
+    const id = setInterval(tick, 20000);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="mono clock">CEBU {time}</span>;
+}
+
 function Nav() {
   const station = useStore((s) => s.station);
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 40);
-    on();
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
-  }, []);
   return (
-    <header className={`nav ${scrolled ? "nav-solid" : ""}`}>
+    <header className="nav">
       <button className="wordmark" onClick={() => goTo("intro")}>
-        Chris Paolo Caral
+        CPC<span>/26</span>
       </button>
       <nav aria-label="Sections">
         {sections.slice(1).map((s, i) => (
@@ -148,62 +154,69 @@ function Nav() {
           </a>
         ))}
       </nav>
+      <CebuClock />
       <a className="btn btn-sm" href={profile.resume} target="_blank" rel="noopener noreferrer">
-        Résumé
+        Résumé ↗
       </a>
     </header>
   );
 }
 
-function Eyebrow({ n, children }: { n: number; children: ReactNode }) {
-  return (
-    <p className="eyebrow">
-      <span>{String(n).padStart(2, "0")}</span>
-      {children}
-    </p>
-  );
-}
-
 function Intro() {
-  const station = useStore((s) => s.station);
+  const night = useStore((s) => s.night);
   return (
     <section id="intro" className="section section-intro">
       <div className="hero">
-        <p className="hero-kicker">
-          <span className="dot" /> {profile.role} · {profile.location}
+        <p className="tags mono">
+          <span>Computer engineer</span>
+          <span>Cebu, PH</span>
+          <span className="tag-live">Open to work</span>
         </p>
         <h1 className="hero-name">
-          Chris Paolo <em>Caral</em>
+          Chris Paolo
+          <br />
+          Caral
         </h1>
         <p className="hero-lede">
-          I build web apps, automation, and the occasional robot. This is my room — scroll to walk through it.
+          I build web apps for my city — fuel prices, government checklists, jeepney routes — and the internal
+          tools and bots that keep small teams running.
         </p>
         <div className="hero-actions">
           <button className="btn btn-primary" onClick={() => goTo("projects")}>
-            View my work
+            See the work →
           </button>
           <a className="btn" href={profile.resume} target="_blank" rel="noopener noreferrer">
             Résumé ↗
           </a>
         </div>
       </div>
-      <p className={`hint ${station === 0 ? "" : "hint-hidden"}`} aria-hidden="true">
-        Tip: click the desk lamp
+      <p className="mono how" aria-hidden="true">
+        Drag to look around · click anything with a <i /> · tap the window for {night ? "golden hour" : "night"}
       </p>
-      <div className="scroll-cue" aria-hidden="true">
-        <span />
-        Scroll
-      </div>
     </section>
   );
 }
 
-function Card({ n, label, title, children }: { n: number; label: string; title: ReactNode; children: ReactNode }) {
+function Panel({ label, fig, title, children }: { label: string; fig: string; title: ReactNode; children: ReactNode }) {
   return (
-    <div className="card">
-      <Eyebrow n={n}>{label}</Eyebrow>
-      <h2 className="card-title">{title}</h2>
-      {children}
+    <div className="panel">
+      <div className="panel-bar mono">
+        <span>{label}</span>
+        <span>{fig}</span>
+      </div>
+      <div className="panel-body">
+        <h2 className="panel-title">{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SpecRow({ k, children }: { k: string; children: ReactNode }) {
+  return (
+    <div className="spec-row">
+      <dt className="mono">{k}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }
@@ -211,28 +224,24 @@ function Card({ n, label, title, children }: { n: number; label: string; title: 
 function About() {
   return (
     <section id="about" className="section">
-      <Card n={1} label="About" title="Hardware brain, software hands.">
-        <p className="lede">{profile.summary}</p>
-        <div className="stats">
-          <div>
-            <b>{projects.length}</b>
-            <span>projects built</span>
-          </div>
-          <div>
-            <b>{experience.length}</b>
-            <span>roles held</span>
-          </div>
-          <div>
-            <b>{certifications.length + awards.length}</b>
-            <span>credentials</span>
-          </div>
-        </div>
-        <p className="muted small">
-          {profile.education.degree} · {profile.education.school}
-          <br />
-          Now: {experience[0].role} at {experience[0].company}
+      <Panel label="About" fig="Fig. 1 — The desk" title="I take things apart.">
+        <p>
+          Taking gadgets apart is how I started. It led me to Computer Engineering at Cebu Technological University,
+          and now to writing software as a Software Engineer Intern at CIS.
         </p>
-      </Card>
+        <p>
+          Outside work I build things Cebu needs: SugboGas tracks pump prices across the province, GovHub tells you
+          exactly what to bring to a government office, and Lakbai finds you the right jeepney.
+        </p>
+        <dl className="spec">
+          <SpecRow k="Based in">{profile.location}</SpecRow>
+          <SpecRow k="Studied">{profile.education.degree}, CTU</SpecRow>
+          <SpecRow k="Now">
+            {experience[0].role}, {experience[0].company}
+          </SpecRow>
+          <SpecRow k="Shipped">{projects.length} projects</SpecRow>
+        </dl>
+      </Panel>
     </section>
   );
 }
@@ -240,22 +249,15 @@ function About() {
 function Skills() {
   return (
     <section id="skills" className="section">
-      <Card n={2} label="Skills" title="What I work with.">
-        <div className="skill-groups">
+      <Panel label="Skills" fig="Fig. 2 — The shelf" title="What I build with.">
+        <dl className="spec spec-wide">
           {skillGroups.map((g) => (
-            <div key={g.label}>
-              <p className="group-label">{g.label}</p>
-              <p className="chips">
-                {g.skills.map((s) => (
-                  <span key={s} className="chip">
-                    {s}
-                  </span>
-                ))}
-              </p>
-            </div>
+            <SpecRow key={g.label} k={g.label}>
+              {g.skills.join(" · ")}
+            </SpecRow>
           ))}
-        </div>
-      </Card>
+        </dl>
+      </Panel>
     </section>
   );
 }
@@ -269,20 +271,19 @@ function Work() {
     <section id="projects" className="section-work">
       <div className="work-inner">
         <header className="work-head">
-          <div>
-            <Eyebrow n={3}>Selected work</Eyebrow>
-            <h2 className="work-title">Things I&apos;ve built.</h2>
-            <p className="muted">
-              Web apps used around Cebu, internal tools for real teams, bots, and a robot that waters plants.
-            </p>
-          </div>
+          <h2 className="work-title">
+            Work <span className="mono">({String(projects.length).padStart(2, "0")})</span>
+          </h2>
+          <p className="work-sub">
+            Web apps for Cebu, internal tools for real teams, a couple of bots, and a robot that waters plants.
+          </p>
           <div className="filters" role="tablist" aria-label="Filter projects">
             {projectFilters.map((f) => (
               <button
                 key={f}
                 role="tab"
                 aria-selected={filter === f}
-                className={`filter ${filter === f ? "filter-on" : ""}`}
+                className={`filter mono ${filter === f ? "filter-on" : ""}`}
                 onClick={() => setFilter(f)}
               >
                 {f}
@@ -291,26 +292,32 @@ function Work() {
           </div>
         </header>
         <ul className="grid">
-          {list.map((p) => (
-            <li key={p.title}>
-              <button className="tile" onClick={() => setOpen(projects.indexOf(p))}>
-                <span className="tile-img">
-                  <Image
-                    src={p.image}
-                    alt={`${p.title} screenshot`}
-                    fill
-                    sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 40vw"
-                  />
-                  <span className="tile-cta">View project →</span>
-                </span>
-                <span className="tile-meta">
-                  <span className="tile-kind">{p.kind}</span>
-                  <span className="tile-name">{p.title}</span>
-                  <span className="tile-desc">{p.description}</span>
-                </span>
-              </button>
-            </li>
-          ))}
+          {list.map((p) => {
+            const idx = projects.indexOf(p);
+            return (
+              <li key={p.title}>
+                <button className="tile" onClick={() => setOpen(idx)}>
+                  <span className="tile-img">
+                    <Image
+                      src={p.image}
+                      alt={`${p.title} screenshot`}
+                      fill
+                      sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                    />
+                  </span>
+                  <span className="tile-meta">
+                    <span className="tile-top mono">
+                      <span>{String(idx + 1).padStart(2, "0")}</span>
+                      <span>{p.kind}</span>
+                    </span>
+                    <span className="tile-name">{p.title}</span>
+                    <span className="tile-desc">{p.description}</span>
+                    <span className="tile-cta mono">Open →</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
       {open !== null && <ProjectDialog index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
@@ -340,28 +347,28 @@ function ProjectDialog({ index, onIndex, onClose }: { index: number; onIndex: (i
   return createPortal(
     <div className="dialog-backdrop" onClick={onClose}>
       <div className="dialog" role="dialog" aria-modal="true" aria-label={p.title} onClick={(e) => e.stopPropagation()}>
+        <div className="dialog-bar mono">
+          <span>
+            {String(index + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")} — {projectCategory[p.title]}
+          </span>
+          <button onClick={onClose} aria-label="Close">
+            Close ✕
+          </button>
+        </div>
         <div className="dialog-img">
           <Image src={p.image} alt={`${p.title} screenshot`} fill sizes="(max-width: 1100px) 100vw, 1100px" priority />
         </div>
         <div className="dialog-body">
           <div>
-            <p className="tile-kind">
-              {p.kind} · {projectCategory[p.title]}
-            </p>
+            <p className="mono dialog-kind">{p.kind}</p>
             <h3 className="dialog-title">{p.title}</h3>
             <p className="dialog-desc">{p.description}</p>
-            <p className="chips">
-              {p.tech.map((t) => (
-                <span key={t} className="chip">
-                  {t}
-                </span>
-              ))}
-            </p>
+            <p className="mono dialog-tech">{p.tech.join(" / ")}</p>
           </div>
           <div className="dialog-actions">
             {p.link && (
               <a className="btn btn-primary" href={p.link} target="_blank" rel="noopener noreferrer">
-                Visit live site ↗
+                Visit site ↗
               </a>
             )}
             <button className="btn" onClick={() => step(-1)} aria-label="Previous project">
@@ -372,9 +379,6 @@ function ProjectDialog({ index, onIndex, onClose }: { index: number; onIndex: (i
             </button>
           </div>
         </div>
-        <button className="dialog-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
       </div>
     </div>,
     document.body,
@@ -384,22 +388,22 @@ function ProjectDialog({ index, onIndex, onClose }: { index: number; onIndex: (i
 function Experience() {
   return (
     <section id="experience" className="section">
-      <Card n={4} label="Experience" title="Where I've worked.">
-        <ol className="timeline">
+      <Panel label="Experience" fig="Fig. 3 — The reading chair" title="Where I've worked.">
+        <ol className="rows">
           {experience.map((job) => (
             <li key={job.company + job.role}>
-              <div className="tl-head">
-                <h3>{job.role}</h3>
-                {job.current && <span className="badge">Now</span>}
+              <span className="mono row-k">{job.period}</span>
+              <div>
+                <h3>
+                  {job.role} {job.current && <span className="tag-now mono">Now</span>}
+                </h3>
+                <p className="row-sub">{job.company}</p>
+                <p className="row-desc">{job.description}</p>
               </div>
-              <p className="tl-meta">
-                {job.company} · {job.period}
-              </p>
-              <p className="muted small">{job.description}</p>
             </li>
           ))}
         </ol>
-      </Card>
+      </Panel>
     </section>
   );
 }
@@ -407,45 +411,38 @@ function Experience() {
 function Credentials() {
   return (
     <section id="certifications" className="section">
-      <Card n={5} label="Credentials" title="Certified & recognized.">
-        <ul className="creds">
+      <Panel label="Credentials" fig="Fig. 4 — The wall" title="Certificates & awards.">
+        <ol className="rows">
           {awards.map((a) => (
             <li key={a.name}>
-              <span className="cred-icon" aria-hidden="true">
-                ★
-              </span>
+              <span className="mono row-k">{a.date}</span>
               <div>
                 <h3>
-                  {a.name} <span className="badge">{a.result}</span>
+                  {a.name} <span className="tag-now mono">{a.result}</span>
                 </h3>
-                <p className="muted small">
-                  {a.date} · {a.detail}
-                </p>
+                <p className="row-desc">{a.detail}</p>
               </div>
             </li>
           ))}
           {certifications.map((c) => (
             <li key={c.name}>
-              <span className="cred-icon" aria-hidden="true">
-                ✓
-              </span>
+              <span className="mono row-k">{c.date}</span>
               <div>
                 <h3>{c.name}</h3>
-                <p className="muted small">
+                <p className="row-sub">
                   {"link" in c && c.link ? (
-                    <a className="link" href={c.link} target="_blank" rel="noopener noreferrer">
+                    <a href={c.link} target="_blank" rel="noopener noreferrer">
                       {c.issuer} ↗
                     </a>
                   ) : (
                     c.issuer
-                  )}{" "}
-                  · {c.date}
+                  )}
                 </p>
               </div>
             </li>
           ))}
-        </ul>
-      </Card>
+        </ol>
+      </Panel>
     </section>
   );
 }
@@ -453,11 +450,8 @@ function Credentials() {
 function Contact() {
   return (
     <section id="contact" className="section section-contact">
-      <Card n={6} label="Contact" title="Let's build something.">
-        <p className="lede">
-          Open to roles, freelance work, and collaborations — web apps, automation, or anything with a circuit board in
-          it.
-        </p>
+      <Panel label="Contact" fig="Fig. 5 — The window" title="Got something to build?">
+        <p>I&apos;m open to roles, freelance work and collaborations. Email is the fastest way to reach me.</p>
         <a className="contact-email" href={`mailto:${profile.email}`}>
           {profile.email}
         </a>
@@ -472,11 +466,14 @@ function Contact() {
             Résumé ↗
           </a>
         </p>
-      </Card>
-      <footer className="footer">
-        © 2026 {profile.name} · Made in Cebu ·{" "}
+      </Panel>
+      <footer className="footer mono">
+        <span>© 2026 {profile.name}</span>
+        <span>
+          3D assets: <a href="https://polyhaven.com" target="_blank" rel="noopener noreferrer">Poly Haven</a> (CC0)
+        </span>
         <a href="https://chrispaolo.dev" target="_blank" rel="noopener noreferrer">
-          classic site
+          Classic site ↗
         </a>
       </footer>
     </section>

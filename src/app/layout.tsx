@@ -1,25 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Instrument_Serif({
-  variable: "--nf-display",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-});
-
-const sans = Inter({
+// Archivo's width axis gives the expanded, industrial headlines; body text uses its normal width.
+const sans = Archivo({
   variable: "--nf-sans",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
+const mono = JetBrains_Mono({
+  variable: "--nf-mono",
+  subsets: ["latin"],
+});
 
 const description =
-  "Step into Chris Paolo Caral's 3D workshop — a Computer Engineer and Software Engineer from Cebu, Philippines, building web apps, automation, and robots.";
+  "Chris Paolo Caral, a computer engineer in Cebu building web apps, internal tools and bots. Walk through his workshop in 3D.";
 
 export const metadata: Metadata = {
-  title: "Chris Paolo Caral — The Workshop",
+  title: "Chris Paolo Caral — Computer Engineer, Cebu",
   description,
   keywords: ["Chris Paolo Caral", "Computer Engineer", "Software Engineer", "Cebu", "Philippines", "Portfolio", "Three.js"],
   authors: [{ name: "Chris Paolo Caral" }],
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "Chris Paolo Caral — The Workshop",
+    title: "Chris Paolo Caral — Computer Engineer, Cebu",
     description,
     type: "website",
     images: [{ url: "/images/profile.png" }],
@@ -39,12 +38,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#120d0a",
+  themeColor: "#0d0d0c",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

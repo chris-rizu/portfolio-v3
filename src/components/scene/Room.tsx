@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { Sparkles, useTexture } from "@react-three/drei";
+import { Hotspot } from "./Hotspot";
+import { getState, setState, useStore } from "@/lib/store";
 
 const WALL_H = 3.2;
 /** Window opening in the back wall (z = -3). */
@@ -43,6 +45,7 @@ function planarUVs(geo: THREE.BufferGeometry, axes: "xy" | "xz" | "zy") {
 }
 
 export function Room() {
+  const night = useStore((s) => s.night);
   const oak = usePbr("oak_wood_planks", 2.2);
   const brick = usePbr("brick_wall_001", 1.6);
   const plaster = usePbr("painted_plaster_wall", 2.5);
@@ -98,8 +101,15 @@ export function Room() {
         <boxGeometry args={[0.02, 0.12, 6.5]} />
         <meshStandardMaterial color="#2b2420" roughness={0.6} />
       </mesh>
-      <Window />
-      <SunShaft />
+      <Hotspot
+        onSelect={() => setState({ night: !getState().night })}
+        label="Window"
+        hint={night ? "Click for golden hour" : "Click for night"}
+        labelAt={[(WIN.x0 + WIN.x1) / 2, WIN.y1 + 0.18, -3.0]}
+      >
+        <Window />
+      </Hotspot>
+      {!night && <SunShaft />}
     </group>
   );
 }

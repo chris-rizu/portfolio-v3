@@ -2,8 +2,8 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { useFrame, type ThreeElements, type ThreeEvent } from "@react-three/fiber";
-import { RoundedBox, useCursor, useGLTF, useTexture } from "@react-three/drei";
+import { useFrame, type ThreeElements } from "@react-three/fiber";
+import { RoundedBox, useGLTF, useTexture } from "@react-three/drei";
 import { Hotspot } from "./Hotspot";
 import { certificateTexture, frameContents, terminalTexture } from "./textures";
 import { projects } from "@/data/portfolio";
@@ -54,7 +54,7 @@ export function Furniture() {
       {/* desk wall */}
       <Model name="metal_office_desk" position={[-0.3, 0, -2.5]} />
       <group position={[-0.38, TOP, -2.42]} rotation-y={0.08}>
-        <Hotspot to="projects" lift={0}>
+        <Hotspot to="projects" label="Projects" hint="Click to see the work" labelAt={[0.18, 0.3, 0]}>
           <Laptop />
         </Hotspot>
       </group>
@@ -63,7 +63,7 @@ export function Furniture() {
       <Model name="alarm_clock_01" position={[0.12, TOP, -2.78]} rotation-y={-0.35} />
 
       {/* skills shelf */}
-      <Hotspot to="skills" position={[-2.4, 0, -2.76]} lift={0}>
+      <Hotspot to="skills" label="Skills" hint="Click to see the stack" labelAt={[0.35, 1.95, 0.15]} position={[-2.4, 0, -2.76]}>
         <Model name="steel_frame_shelves_01" scale={0.085} />
         <Model name="book_encyclopedia_set_01" position={[-0.4, 0.93, -0.02]} />
         <Model name="Camera_01" position={[0.12, 1.36, 0]} rotation-y={-0.5} />
@@ -73,7 +73,9 @@ export function Furniture() {
       <Model name="potted_plant_01" position={[-3.45, 0, -2.55]} />
 
       {/* reading corner by the window */}
-      <Model name="modern_arm_chair_01" position={[2.15, 0, -1.65]} rotation-y={-0.55} />
+      <Hotspot to="experience" label="Experience" hint="Click for the timeline" labelAt={[0, 1.2, 0]} position={[2.15, 0, -1.65]}>
+        <Model name="modern_arm_chair_01" rotation-y={-0.55} />
+      </Hotspot>
       <Model name="side_table_01" position={[3.3, 0, -2.35]} rotation-y={-0.2} />
       <PipeLamp position={[3.3, 0.548, -2.35]} />
       <Model name="potted_plant_02" position={[3.45, 0, -0.85]} />
@@ -86,8 +88,6 @@ export function Furniture() {
 /** Clickable desk lamp: toggles its bulb and spotlight. */
 function DeskLamp() {
   const [on, setOn] = useState(true);
-  const [hovered, setHovered] = useState(false);
-  useCursor(hovered);
   const lamp = useRef<THREE.Group>(null);
   const obj = useModel("desk_lamp_arm_01", (mat) => {
     if (mat.name !== "desk_lamp_arm_01_light") return undefined;
@@ -109,27 +109,19 @@ function DeskLamp() {
     });
   }, [on]);
 
-  const click = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    setOn((v) => !v);
-  };
-
   return (
     <group>
       <primitive object={target} />
-      <group
-        ref={lamp}
-        position={[-1.08, TOP, -2.72]}
-        rotation-y={-Math.PI / 2 + 0.35}
-        onClick={click}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
+      <Hotspot
+        onSelect={() => setOn((v) => !v)}
+        label="Lamp"
+        hint={on ? "Click to switch off" : "Click to switch on"}
+        labelAt={[-1.0, TOP + 0.9, -2.55]}
       >
-        <primitive object={obj} />
-      </group>
+        <group ref={lamp} position={[-1.08, TOP, -2.72]} rotation-y={-Math.PI / 2 + 0.35}>
+          <primitive object={obj} />
+        </group>
+      </Hotspot>
       <spotLight
         position={[-0.95, 1.5, -2.45]}
         target={target}
@@ -223,13 +215,13 @@ function FrameWall() {
       <primitive object={wallTarget} />
       <spotLight position={[-2.4, 2.95, -1.5]} target={wallTarget} angle={0.95} penumbra={0.9} intensity={6} distance={4.5} decay={2} color="#ffe2bf" />
       <group position={[-3.99, 0, -0.75]} rotation-y={Math.PI / 2}>
-        {layout.map(({ f, x, y }) => (
-          <Hotspot key={f.content.title} to="certifications" position={[x, y, 0]} lift={0.025}>
-            <group rotation-z={Math.PI / 2}>
+        <Hotspot to="certifications" label="Credentials" hint="Click to read them" labelAt={[0.75, 2.5, 0.05]}>
+          {layout.map(({ f, x, y }) => (
+            <group key={f.content.title} position={[x, y, 0]} rotation-z={Math.PI / 2}>
               <primitive object={f.obj} />
             </group>
-          </Hotspot>
-        ))}
+          ))}
+        </Hotspot>
       </group>
     </>
   );

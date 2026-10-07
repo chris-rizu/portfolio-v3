@@ -18,9 +18,11 @@ type State = {
   /** performance.now() of the last wave request. */
   waveAt: number;
   ready: boolean;
+  /** Clicking the window flips the room between golden hour and night. */
+  night: boolean;
 };
 
-let state: State = { station: 0, project: -1, waveAt: 0, ready: false };
+let state: State = { station: 0, project: -1, waveAt: 0, ready: false, night: false };
 const listeners = new Set<() => void>();
 
 export function setState(patch: Partial<State>) {
@@ -29,7 +31,8 @@ export function setState(patch: Partial<State>) {
     next.station === state.station &&
     next.project === state.project &&
     next.waveAt === state.waveAt &&
-    next.ready === state.ready
+    next.ready === state.ready &&
+    next.night === state.night
   ) {
     return;
   }
