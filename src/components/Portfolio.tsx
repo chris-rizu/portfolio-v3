@@ -191,7 +191,8 @@ function Intro() {
         </div>
       </div>
       <p className="mono how" aria-hidden="true">
-        Drag to look around · click anything with a <i /> · tap the window for {night ? "golden hour" : "night"}
+        <span className="how-drag">Drag to look around ·</span> Tap anything with a <i /> · tap the window for{" "}
+        {night ? "golden hour" : "night"}
       </p>
     </section>
   );
